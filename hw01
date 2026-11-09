@@ -1,1 +1,139 @@
+# [База]
+# 1. Приводим города к единому виду
+cities_clean = [city.strip().capitalize() for city in cities]
 
+# 2. Преобразуем суммы в числа
+amounts_int = [int(amount) for amount in amounts]
+
+# 3. Общее число заказов, общая сумма, средний чек
+total_orders = len(amounts_int)
+total_revenue = sum(amounts_int)
+average_check = round(total_revenue / total_orders)
+
+print(f"Общее число заказов: {total_orders}")
+print(f"Общая сумма: {total_revenue} ₸")
+print(f"Средний чек: {average_check} ₸\n")
+
+# 4. Неоплаченные заказы и их сумма
+unpaid_count = 0
+unpaid_sum = 0
+for amount, is_paid in zip(amounts_int, paid):
+    if not is_paid:
+        unpaid_count += 1
+        unpaid_sum += amount
+
+print(f"Неоплачено заказов: {unpaid_count}, на сумму: {unpaid_sum} ₸\n")
+
+# 5. Вывод таблицы
+print("город | сумма | статус")
+print("-" * 25)
+for city, amount, status in zip(cities_clean, amounts_int, paid):
+    print(f"{city} | {amount} | {status}")
+# [Стандарт]
+# 6. Выручка по Алматы и Астане (только оплаченные)
+revenue_almaty = 0
+revenue_astana = 0
+
+for city, amount, is_paid in zip(cities_clean, amounts_int, paid):
+    if is_paid:
+        if city == "Almaty":
+            revenue_almaty += amount
+        elif city == "Astana":
+            revenue_astana += amount
+
+print(f"Выручка по Алматы (оплачено): {revenue_almaty} ₸")
+print(f"Выручка по Астане (оплачено): {revenue_astana} ₸\n")
+
+# 7. Номер (индекс) и город самого крупного оплаченного заказа
+max_amount = -1
+max_index = -1
+
+for i in range(len(amounts_int)):
+    if paid[i] and amounts_int[i] > max_amount:
+        max_amount = amounts_int[i]
+        max_index = i
+
+print(f"Самый крупный оплаченный заказ: индекс {max_index}, город {cities_clean[max_index]}, сумма {max_amount} ₸\n")
+
+# 8. Доля заказов выходного дня (%)
+weekend_count = 0
+for day in days:
+    if day in ["сб", "вс"]:
+        weekend_count += 1
+
+weekend_share = (weekend_count / len(days)) * 100
+print(f"Доля заказов выходного дня: {weekend_share:.1f}%\n")
+
+# 9. Задача «копилка»
+# Часть А: фиксированный взнос 15 000 ₸
+target = 400000
+savings_a = 0
+months_a = 0
+while savings_a < target:
+    savings_a += 15000
+    months_a += 1
+
+print(f"А) Накопит за {months_a} месяцев.")
+
+# Часть Б: взнос увеличивается на 1 000 ₸ каждый месяц
+savings_b = 0
+months_b = 0
+monthly_deposit = 15000
+while savings_b < target:
+    savings_b += monthly_deposit
+    months_b += 1
+    monthly_deposit += 1000
+
+print(f"Б) С увеличением взноса накопит за {months_b} месяцев.")
+# [Челлендж]
+# 10. Уникальные города и оплаченная выручка по ним (без словарей)
+unique_cities = []
+revenue_by_city = []
+
+for city, amount, is_paid in zip(cities_clean, amounts_int, paid):
+    if is_paid:
+        if city in unique_cities:
+            idx = unique_cities.index(city)
+            revenue_by_city[idx] += amount
+        else:
+            unique_cities.append(city)
+            revenue_by_city.append(amount)
+
+# Сортировка по убыванию выручки (пузырьком)
+n = len(revenue_by_city)
+for i in range(n):
+    for j in range(0, n - i - 1):
+        if revenue_by_city[j] < revenue_by_city[j + 1]:
+            # Меняем местами выручку
+            revenue_by_city[j], revenue_by_city[j + 1] = revenue_by_city[j + 1], revenue_by_city[j]
+            # Синхронно меняем города
+            unique_cities[j], unique_cities[j + 1] = unique_cities[j + 1], unique_cities[j]
+
+print("Города и выручка (убывание):")
+for c, r in zip(unique_cities, revenue_by_city):
+    print(f"{c}: {r} ₸")
+print()
+
+# 11. Медиана суммы заказа без библиотек
+sorted_amounts = sorted(amounts_int)
+n_amt = len(sorted_amounts)
+if n_amt % 2 != 0:
+    median = sorted_amounts[n_amt // 2]
+else:
+    median = (sorted_amounts[n_amt // 2 - 1] + sorted_amounts[n_amt // 2]) / 2
+
+print(f"Медиана суммы заказа: {median}\n")
+
+# 12. Текстовая гистограмма выручки по дням
+all_days = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
+day_revenue = {d: 0 for d in all_days}
+
+for day, amount, is_paid in zip(days, amounts_int, paid):
+    if is_paid:
+        day_revenue[day] += amount
+
+print("Гистрограмма выручки по дням (1 шт. '█' = 5 000 ₸):")
+for d in all_days:
+    rev = day_revenue[d]
+    bars = '█' * (rev // 5000)
+    print(f"{d} | {bars:<10} {rev}")
